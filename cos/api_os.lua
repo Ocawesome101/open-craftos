@@ -90,3 +90,20 @@ end
 function os.reboot()
   computer.shutdown(true)
 end
+
+function os.getComputerID()
+  return 1
+end
+
+function os.getComputerLabel()
+  return component.invoke(computer.getBootAddress(), "getLabel")
+end
+
+function os.setComputerLabel(l)
+  checkArg(1, l, "string")
+  return component.invoke(computer.getBootAddress(), "setLabel", l)
+end
+
+function os.day()
+  return os.time()
+end

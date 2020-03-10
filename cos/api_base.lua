@@ -23,3 +23,8 @@ function _G.loadstring(string, env)
 end
 
 _G._HOST = "OpenComputers " .. _VERSION
+
+function table.maxn(t)
+  checkArg(1, t, "table")
+  return #t
+end
