@@ -8,7 +8,6 @@ local timers = {}
 
 local function pullEvent() -- Wrap signals into CraftOS-compatible events
   local e = {computer.pullSignal()}
-  if term then term.updateCursor() end
   local rtn = {}
   if e[1] == "key_down" then
     if e[3] >= 32 and e[3] < 127 then
@@ -23,6 +22,16 @@ local function pullEvent() -- Wrap signals into CraftOS-compatible events
   elseif e[1] == "clipboard" then
     rtn[1] = "paste"
     rtn[2] = e[3]
+  elseif e[1] == "touch" then
+    rtn[1] = "mouse_click"
+    rtn[2] = e[5]
+    rtn[3] = e[3]
+    rtn[4] = e[4]
+  elseif e[1] == "drop" then
+    rtn[1] = "mouse_up"
+    rtn[2] = e[5]
+    rtn[3] = e[3]
+    rtn[4] = e[4]
   else
     rtn = e
   end

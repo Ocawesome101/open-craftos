@@ -100,6 +100,7 @@ function term.setPaletteColor(c, h)
   end
   ccColors[c] = h
 end
+
 function term.clear()
   gpu.fill(1, 1, w, h, " ")
 end
@@ -109,14 +110,41 @@ function term.getSize()
 end
 
 function term.write(str)
+  checkArg(1, str, "string", "number")
+  if type(str) == "number" then
+    return
+  end
   str = str:gsub("\t", "    ")
   gpu.set(x, y, str)
   x = x + #str
 end
 
+local blink = false
+
+function term.setCursorBlink(b)
+  checkArg(1, b, "boolean")
+  blink = b
+  return
+end
+
+function term.getCursorBlink()
+  return blink
+end
+
 function term.setCursorPos(nx, ny)
   checkArg(1, nx, "number")
   checkArg(2, ny, "number")
+  if blink then
+    local b,f = gpu.getBackground(), gpu.getForeground()
+    gpu.setForeground(b)
+    gpu.setBackground(f)
+    local char = gpu.get(nx, ny)
+    local chr2 = gpu.get(x, y)
+    gpu.set(nx, ny, char)
+    gpu.setForeground(f)
+    gpu.setBackground(b)
+    if x ~= nx or y ~= ny then gpu.set(x, y, chr2) end
+  end
   x, y = nx, ny
 end
 
@@ -128,8 +156,16 @@ function term.blit(text, fg, bg)
     error("Mismatched argument lengths")
   end
   for i=1, #text, 1 do
-    gpu.setForeground(ccColors[ccColorLetters[fg:sub(i,i)]])
-    gpu.setBackground(ccColors[ccColorLetters[bg:sub(i,i)]])
+    local f = ccColors[ccColorLetters[fg:sub(i,i)]] or fg:sub(i,i) == " " and gpu.getForeground()
+    local b = ccColors[ccColorLetters[bg:sub(i,i)]] or bg:sub(i,i) == " " and gpu.getBackground()
+    if not f then
+      error("Invalid foreground color " .. fg:sub(i,i))
+    end
+    if not b then
+      error("Invalid background color " .. bg:sub(i,i))
+    end
+    gpu.setForeground(f)
+    gpu.setBackground(b)
     term.write(text:sub(i,i))
   end
 end
@@ -152,30 +188,6 @@ function term.setTextColor(c)
     error("Invalid color index " .. tostring(c))
   end
   gpu.setForeground(ccColors[c])
-end
-
-local blink = false
-
-function term.updateCursor()
-  if blink then
-    local b,f = gpu.getBackground(), gpu.getForeground()
-    gpu.setForeground(b)
-    gpu.setBackground(f)
-    local char = gpu.get(x, y)
-    gpu.set(x, y, char)
-    gpu.setForeground(f)
-    gpu.setBackground(b)
-  end
-end
-
-function term.setCursorBlink(b)
-  checkArg(1, b, "boolean")
-  blink = b
-  return
-end
-
-function term.getCursorBlink()
-  return blink
 end
 
 local nativeTerm = {}

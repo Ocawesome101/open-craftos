@@ -19,20 +19,13 @@ function fs.open(file, mode)
   local file = clean(file)
   local handle, err = oldOpen(file, mode)
   if not handle then
-    error(err)
+    return false, err
   end
   
   local h = {}
-  setmetatable(h, {__handle = true})
-  
-  h.read = (mode == "r" or mode == "rw" or mode == "a") and function(amount)
-    checkArg(1, amount, "number")
-    return fs.read(handle, amount)
-  end
-  
   h.write = (mode == "w" or mode == "rw" or mode == "a") and function(data)
     checkArg(1, data, "string")
-    return fs.write(handle, amount)
+    return fs.write(handle, data)
   end
   
   h.readAll = (mode == "r" or mode == "rw" or mode == "a") and function()
@@ -42,6 +35,14 @@ function fs.open(file, mode)
       c = c .. (r or "")
     until not r
     return c
+  end
+  
+  h.read = (mode == "r" or mode == "rw" or mode == "a") and function(amount)
+    if amount == "*a" then
+      return h.readAll()
+    end
+    checkArg(1, amount, "number")
+    return fs.read(handle, amount)
   end
   
   function h.close()
@@ -59,8 +60,8 @@ fs.getSize = function(p)checkArg(1,p,"string")return fs.size(clean(p))end
 fs.getFreeSpace = function()return fs.spaceTotal() - fs.spaceUsed()end
 fs.makeDir = function()checkArg(1,p,"string")return fs.makeDirectory(clean(p))end
 fs.move = function(p,d)checkArg(1,p,"string")checkArg(2,d,"string")return fs.rename(clean(p),clean(d))end
-fs.delete = function(p)checkArg(1,p,"string")return fs.remove(clean(p))end
-fs.find = function()return {} end -- I'm too lazy to properly implement this
+fs.delete = function(p)checkArg(1,p,"string")local o,e=fs.remove(clean(p))if not o then error(e)end return o end
+fs.find = function(p)checkArg(1,p,"string")return(fs.isDir(p)and fs.list(p))or p end -- I'm too lazy to properly implement this
 
 local fslist = fs.list
 fs.list = function(dir)

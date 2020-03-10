@@ -51,6 +51,15 @@ if not ok then
   error(err)
 end
 
-ok()
+local bios = coroutine.create(ok)
+local eventData = {}
+local pe = os.pullEventRaw
+while true do
+  local ok, filter = coroutine.resume(bios, table.unpack(eventData))
+  if not ok then
+    error(filter)
+  end
+  eventData = {pe()}
+end
 
 error("BIOS exited!")

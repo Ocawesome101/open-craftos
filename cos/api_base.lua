@@ -1,9 +1,11 @@
 -- Misc things
 
+local ld = load
+
 function _G.setfenv(func, env)
   checkArg(1, func, "function")
   checkArg(2, env, "table")
-  return load(func, "=setfenv", "bt", env) -- Might work
+  return ld(func, "=setfenv", "bt", env) -- Might work
 end
 
 function _G.getfenv()
